@@ -2,7 +2,7 @@
 name: memoria-largoplazo
 description: Guarda y recupera información importante de forma persistente entre conversaciones. Permite almacenar datos relevantes, notas, preferencias del usuario y contexto para futuros chats.
 metadata:
-  homepage: https://github.com/tu-usuario/long-term-memory-skill
+  homepage: https://github.com/Cosio33/Skills-Gallery/tree/main/Skills/memoria-largoplazo
 ---
 
 # Memoria de Largo Plazo
