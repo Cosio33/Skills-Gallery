@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        window.ai_edge_gallery_get_result = async () => {
+            return `
+                Eres un asistente experto en crear Skills para AI Edge Gallery.
+                Cuando el usuario describa la Skill que quiere, debes generar el contenido del archivo SKILL.md.
+                Devuelve un JSON con la siguiente estructura:
+                {
+                    "nombre": "nombre-de-la-skill",        // en kebab-case, será el nombre de la carpeta
+                    "descripcion": "Breve descripción de la skill",
+                    "contenido": "contenido del archivo SKILL.md"
+                }
+            `;
+        };
+
+        async function crearYEstructurarSkill(nombre, descripcion, contenidoMd) {
+            try {
+                // 1. Seleccionar carpeta raíz (donde se creará la carpeta 'skills')
+                const raiz = await window.showDirectoryPicker();
+                
+                // 2. Crear/Verificar la carpeta 'skills'
+                let skillsDir;
+                try {
+                    skillsDir = await raiz.getDirectoryHandle("skills", { create: true });
+                } catch {
+                    skillsDir = await raiz.getDirectoryHandle("skills");
+                }
+                
+                // 3. Crear carpeta de la nueva skill
+                const skillDir = await skillsDir.getDirectoryHandle(nombre, { create: true });
+                
+                // 4. Crear archivo SKILL.md
+                const archivoMd = await skillDir.getFileHandle("SKILL.md", { create: true });
+                const writable = await archivoMd.createWritable();
+                await writable.write(contenidoMd);
+                await writable.close();
+                
+                return `✅ Skill "${nombre}" creada exitosamente en: skills/${nombre}/SKILL.md`;
+            } catch (error) {
+                console.error("Error al guardar:", error);
+                return `❌ Error: ${error.message}`;
+            }
+        }
+
+        window.crearSkill = async (nombre, descripcion, contenidoMd) => {
+            return await crearYEstructurarSkill(nombre, descripcion, contenidoMd);
+        };
+    </script>
+</head>
+<body></body>
+</html>
