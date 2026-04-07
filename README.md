@@ -1,6 +1,6 @@
-# 🧠 AI Edge Skills – Personalidad y Memoria para Agentes en Español
+# 🧠 AI Edge Skills
 
-Este repositorio contiene una colección de **Skills** para la plataforma [AI Edge Gallery](https://github.com/google-ai-edge/gallery), diseñadas para dotar a los agentes de inteligencia artificial de personalidad, memoria persistente y capacidades de análisis técnico, todo en español.
+Este repositorio contiene una colección de **Skills** para la plataforma [AI Edge Gallery](https://github.com/google-ai-edge/gallery), diseñadas para mejorar el uso de AI nativa en Android.
 
 ## 🚀 ¿Qué es una Skill?
 
@@ -25,7 +25,7 @@ Cada skill vive en su propia subcarpeta dentro de `skills/`. El nombre de la car
 
 ### 1. Skill de solo texto (personalidad fija)
 
-1. Crea una carpeta con el nombre deseado dentro de `skills/`.
+1. Crea una carpeta con el nombre deseado.
 2. Dentro, crea un archivo `SKILL.md` con este formato:
 
 ```markdown
