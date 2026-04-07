@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Long Term Memory</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 16px;
+            min-height: 100vh;
+        }
+        .container { max-width: 700px; margin: 0 auto; }
+        h2 { color: #00d4ff; margin-bottom: 20px; font-size: 20px; text-align: center; }
+        .memory-card {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid #00d4ff;
+        }
+        .memory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .category {
+            background: #0f3460;
+            color: #00d4ff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .date { color: #888; font-size: 12px; }
+        .content { color: #fff; line-height: 1.5; margin-bottom: 8px; }
+        .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+        .tag {
+            background: #e94560;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        .btn {
+            background: #00d4ff;
+            color: #1a1a2e;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 4px;
+        }
+        .btn-danger { background: #e94560; color: white; }
+        .btn-secondary { background: #0f3460; color: #00d4ff; }
+        .actions { margin-top: 20px; text-align: center; }
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #0f3460;
+            border-radius: 8px;
+            background: #16213e;
+            color: white;
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
+        .stats {
+            text-align: center;
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <h2>🧠 Memoria de Largo Plazo</h2>
+        <div id="content"></div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'ai_edge_gallery_long_term_memory';
+        
+        // Generar ID único
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // Obtener todas las memorias
+        function getMemories() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // Guardar memorias
+        function saveMemories(memories) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
+        }
+
+        // Guardar nueva memoria
+        function saveMemory(content, category = 'general', tags = []) {
+            const memories = getMemories();
+            const memory = {
+                id: generateId(),
+                content: content,
+                category: category,
+                tags: Array.isArray(tags) ? tags : [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            memories.unshift(memory); // Más reciente primero
+            saveMemories(memories);
+            return memory;
+        }
+
+        // Buscar memorias
+        function searchMemories(query = '') {
+            const memories = getMemories();
+            if (!query.trim()) return memories;
+            
+            const lowerQuery = query.toLowerCase();
+            return memories.filter(m => 
+                m.content.toLowerCase().includes(lowerQuery) ||
+                m.category.toLowerCase().includes(lowerQuery) ||
+                m.tags.some(t => t.toLowerCase().includes(lowerQuery))
+            );
+        }
+
+        // Borrar memoria
+        function deleteMemory(id) {
+            if (id === 'all') {
+                saveMemories([]);
+                return true;
+            }
+            const memories = getMemories().filter(m => m.id !== id);
+            saveMemories(memories);
+            return true;
+        }
+
+        // Formatear fecha
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleDateString('es-ES', { 
+                day: '2-digit', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        // Renderizar vista
+        function renderView(memories, title = "Todas las Memorias", query = '') {
+            const container = document.getElementById('content');
+            
+            let html = `
+                <div class="stats">
+                    ${memories.length} recuerdo${memories.length !== 1 ? 's' : ''} almacenado${memories.length !== 1 ? 's' : ''}
+                    ${query ? ` • Búsqueda: "${query}"` : ''}
+                </div>
+            `;
+
+            if (memories.length === 0) {
+                html += `
+                    <div class="empty-state">
+                        <p>📝 No hay memorias guardadas${query ? ' para esta búsqueda' : ''}</p>
+                        <p style="margin-top: 10px; font-size: 14px;">
+                            Dime "guarda esto" seguido de la información importante que quieres recordar.
+                        </p>
+                    </div>
+                `;
+            } else {
+                html += memories.map(m => `
+                    <div class="memory-card">
+                        <div class="memory-header">
+                            <span class="category">${m.category}</span>
+                            <span class="date">${formatDate(m.createdAt)}</span>
+                        </div>
+                        <div class="content">${escapeHtml(m.content)}</div>
+                        ${m.tags.length ? `
+                            <div class="tags">
+                                ${m.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            }
+
+            html += `
+                <div class="actions">
+                    <button class="btn btn-secondary" onclick="exportMemories()">📤 Exportar</button>
+                    <button class="btn btn-danger" onclick="clearAll()">🗑️ Borrar Todo</button>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Escapar HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Exportar memorias
+        function exportMemories() {
+            const memories = getMemories();
+            const dataStr = JSON.stringify(memories, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `memoria-ai-gallery-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            alert('📁 Memoria exportada correctamente');
+        }
+
+        // Borrar todo
+        function clearAll() {
+            if (confirm('¿Estás seguro de que quieres borrar TODA la memoria? Esta acción no se puede deshacer.')) {
+                deleteMemory('all');
+                renderView([]);
+                alert('🗑️ Toda la memoria ha sido borrada');
+            }
+        }
+
+        // Función principal expuesta
+        window['ai_edge_gallery_get_result'] = async (data) => {
+            try {
+                const params = JSON.parse(data);
+                const { action, content, category, tags, query, id } = params;
+
+                switch(action) {
+                    case 'save':
+                        if (!content) {
+                            return JSON.stringify({ error: 'No se proporcionó contenido para guardar' });
+                        }
+                        const saved = saveMemory(content, category || 'general', tags || []);
+                        const allMemories = getMemories();
+                        renderView(allMemories, "Memoria Guardada");
+                        return JSON.stringify({
+                            result: `✅ Información guardada en memoria (ID: ${saved.id})`,
+                            memoryCount: allMemories.length,
+                            webview: {
+                                url: "memory-view.html",
+                                aspectRatio: 1.2
+                            }
+                        });
+
+                    case 'search':
+                        const found = searchMemories(query || '');
+                        renderView(found, `Resultados de búsqueda`, query);
+                        const resultText = found.length > 0 
+                            ? `Encontré ${found.length} recuerdo${found.length !== 1 ? 's' : ''} relacionado${found.length !== 1 ? 's' : ''} con "${query || 'todo'}":\n\n` + 
+                              found.slice(0, 3).map(m => `• [${m.category}] ${m.content.substring(0, 100)}${m.content.length > 100 ? '...' : ''}`).join('\n\n')
+                            : `No encontré recuerdos sobre "${query || 'eso'}".`;
+                        return JSON.stringify({
+                            result: resultText,
+                            memories: found,
+                            webview: {
+                                url: "memory-view.html",
+                                aspectRatio: 1.2
+                            }
+                        });
+
+                    case 'view':
+                        const all = getMemories();
+                        renderView(all);
+                        return JSON.stringify({
+                            result: `Tienes ${all.length} recuerdo${all.length !== 1 ? 's' : ''} almacenado${all.length !== 1 ? 's' : ''} en tu memoria de largo plazo.`,
+                            webview: {
+                                url: "memory-view.html",
+                                aspectRatio: 1.2
+                            }
+                        });
+
+                    case 'delete':
+                        if (!id) {
+                            return JSON.stringify({ error: 'Se requiere ID para borrar' });
+                        }
+                        deleteMemory(id);
+                        const remaining = getMemories();
+                        renderView(remaining);
+                        return JSON.stringify({
+                            result: id === 'all' ? '🗑️ Toda la memoria borrada' : '🗑️ Recuerdo eliminado',
+                            webview: {
+                                url: "memory-view.html",
+                                aspectRatio: 1.2
+                            }
+                        });
+
+                    default:
+                        return JSON.stringify({ error: 'Acción no reconocida. Usa: save, search, view, delete' });
+                }
+
+            } catch (e) {
+                return JSON.stringify({ error: `Error en memoria: ${e.message}` });
+            }
+        };
+
+        // Inicializar vista vacía
+        renderView(getMemories());
+    </script>
+</body>
+</html>
