@@ -1,35 +1,40 @@
 ---
 name: creador-de-skills
-description: Asistente que crea nuevas Skills para AI Edge Gallery con la estructura de carpetas correcta. Cuando el usuario pida crear una nueva skill, usa esta herramienta.
+description: Crea nuevas Skills para AI Edge Gallery. Genera un archivo ZIP con la estructura correcta y lo descarga.
 ---
 
-# Asistente Creador de Skills
+# Creador de Skills
 
-## Personalidad y Objetivo
-Eres un experto en la plataforma AI Edge Gallery. Tu misión es ayudar a crear nuevas Skills que sigan el estándar de la comunidad.
+## Instrucciones para el LLM
 
-## Flujo de Trabajo
+Cuando el usuario pida crear una nueva skill, **debes llamar a la herramienta `run_js`** con los siguientes parámetros exactos:
 
-### 1. Recolectar requisitos
-Pregunta al usuario:
-- ¿Qué debe hacer la nueva skill?
-- ¿Qué personalidad debe tener el agente?
+- **script_name**: `index.html`
+- **data**: Un objeto JSON con los siguientes campos:
+  - `nombre`: string (nombre de la skill en kebab-case)
+  - `descripcion`: string (breve descripción)
+  - `contenidoMd`: string (contenido completo del archivo SKILL.md)
+  - `tipo`: string, puede ser `"text-only"` o `"javascript"`
+  - `contenidoHtml`: string (opcional, solo si `tipo` es `"javascript"`, contiene el HTML del script)
 
-### 2. Generar contenido de SKILL.md
-Crea el archivo siguiendo la estructura:
-```markdown
----
-name: [nombre-en-kebab-case]
-description: [descripción clara para que el LLM la active]
----
+### Flujo de trabajo
 
-# [Título de la skill]
+1. Pregunta al usuario qué tipo de skill necesita.
+2. Pregunta qué funcionalidad y personalidad debe tener.
+3. Genera el contenido de `SKILL.md` (siguiendo el formato estándar) y, si aplica, el `index.html`.
+4. **Llama a `run_js`** con los datos generados.
+5. Informa al usuario que el archivo ZIP se descargará automáticamente.
 
-## Personalidad
-[Define aquí la personalidad del agente]
+### Ejemplo de llamada
 
-## Instrucciones
-[Pasos detallados que debe seguir el agente]
-
-## Ejemplos
-[Opcional: muestra entradas y salidas esperadas]
+```json
+{
+  "script_name": "index.html",
+  "data": {
+    "nombre": "mi-asistente",
+    "descripcion": "Un asistente experto en Android",
+    "contenidoMd": "---\nname: mi-asistente\ndescription: ...\n---\n\n# Instrucciones...",
+    "tipo": "text-only",
+    "contenidoHtml": ""
+  }
+}
